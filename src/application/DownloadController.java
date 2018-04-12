@@ -30,11 +30,10 @@ public class DownloadController {
 	private Label filesize;
 	@FXML
 	private ProgressBar downloadProgress;
-	
+
 	private DownloadTask worker;
 	private File file;
 
-	
 	public URL createURL() {
 		String urlname = urlField.getText();
 		URL url = null;
@@ -47,34 +46,32 @@ public class DownloadController {
 		}
 	}
 
-	
 	public void startWorker(ActionEvent event) {
 		FileChooser fc = new FileChooser();
-		fc.setInitialDirectory(file);
 		if (worker == null || !worker.isRunning()) {
 			file = fc.showSaveDialog(new Stage());
-			worker = new DownloadTask(createURL(),file);
+			worker = new DownloadTask(createURL(), file);
 			// automatically update the progressBar using worker's progress
 			// Property
 			downloadProgress.progressProperty().bind(worker.progressProperty());
 			// update the displayField whenever the value of worker changes:
 			// add the observer (ChangeListener)
 			filesize.textProperty().bind(worker.messageProperty());
-			filename.setText(fc.getTitle());
+			filename.setText(file.getName());
 			new Thread(worker).start();
 		}
 	}
-	
-	public void stopWorker(ActionEvent event){
+
+	public void stopWorker(ActionEvent event) {
 		worker.cancel();
 	}
-	
-	public void handleClear(ActionEvent event){
+
+	public void handleClear(ActionEvent event) {
 		urlField.clear();
 	}
-	
+
 	@FXML
-	public void initialize(){
+	public void initialize() {
 		download.setOnAction(this::startWorker);
 		cancel.setOnAction(this::stopWorker);
 	}

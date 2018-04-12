@@ -27,7 +27,6 @@ public class DownloadTask extends Task<Long> {
 	@Override
 	protected Long call() throws Exception {
 		Long length = getFileSize();
-		System.out.println(length);
 		if (length <= 0) {
 			Alert alert = new Alert(AlertType.INFORMATION);
 			alert.setTitle("Warning");
@@ -81,7 +80,6 @@ public class DownloadTask extends Task<Long> {
 				e.printStackTrace();
 			}
 		}
-
 		return bytesRead;
 	}
 
@@ -103,6 +101,21 @@ public class DownloadTask extends Task<Long> {
 			connection = url.openConnection();
 			length = connection.getContentLengthLong();
 			return length;
+		} catch (MalformedURLException ex) {
+			System.err.println(ex.getMessage());
+		} catch (IOException ioe) {
+			System.err.println(ioe.getMessage());
+		}
+		return null;
+	}
+
+	public String getFileType() {
+		String type = "";
+		URLConnection connection = null;
+		try {
+			connection = url.openConnection();
+			type = connection.getContentType();
+			return type;
 		} catch (MalformedURLException ex) {
 			System.err.println(ex.getMessage());
 		} catch (IOException ioe) {
