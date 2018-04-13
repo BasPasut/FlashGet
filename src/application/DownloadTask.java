@@ -27,57 +27,56 @@ public class DownloadTask extends Task<Long> {
 	@Override
 	protected Long call() throws Exception {
 		Long length = getFileSize();
-		if (length <= 0) {
-			Alert alert = new Alert(AlertType.INFORMATION);
-			alert.setTitle("Warning");
-			alert.setHeaderText("Invalid URL");
-			alert.setContentText("Cannot receive file from this URL. Please select another URL.");
-			alert.showAndWait();
-		}
-		updateProgress(0, length);
-		final int BUFFERSIZE = 16 * 1024;
-		InputStream in = null;
-		OutputStream out = null;
-		try {
-			URLConnection connection = url.openConnection();
-			in = connection.getInputStream();
-			out = getOutputStream(file);
-		} catch (IOException e) {
-			System.err.println(e.getMessage());
-		}
-		byte[] buffer = new byte[BUFFERSIZE];
 		long bytesRead = 0;
-		try {
-			do {
-				int n = in.read(buffer);
-				updateValue(bytesRead);
-				updateMessage(Long.toString(bytesRead) + "/" + length);
-				updateProgress(bytesRead, length);
-				if (n < 0)
-					break;
-				// n < 0 means end of the input
-				out.write(buffer, 0, n);
-				// write n bytes from buffer
-				bytesRead += n;
+		if (length <= 0) {
 
-				try {
-					Thread.sleep(1);
-				} catch (Exception e) {
-					break;
-				}
-			} while (true);
-		} catch (IOException ex) {
-			// handle it
-		} finally {
+		} else {
+			updateProgress(0, length);
+			final int BUFFERSIZE = 16 * 1024;
+			InputStream in = null;
+			OutputStream out = null;
 			try {
-				in.close();
+				URLConnection connection = url.openConnection();
+				in = connection.getInputStream();
+				out = getOutputStream(file);
 			} catch (IOException e) {
-				e.printStackTrace();
+				alertBox();
 			}
+			byte[] buffer = new byte[BUFFERSIZE];
 			try {
-				out.close();
-			} catch (IOException e) {
-				e.printStackTrace();
+				do {
+					int n = in.read(buffer);
+					updateValue(bytesRead);
+					updateMessage(Long.toString(bytesRead) + "/" + length);
+					updateProgress(bytesRead, length);
+					if (n < 0){
+						updateMessage("Complete");
+						break;
+					}
+					// n < 0 means end of the input
+					out.write(buffer, 0, n);
+					// write n bytes from buffer
+					bytesRead += n;
+
+					try {
+						Thread.sleep(1);
+					} catch (Exception e) {
+						break;
+					}
+				} while (true);
+			} catch (IOException ex) {
+				alertBox();
+			} finally {
+				try {
+					in.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				try {
+					out.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			}
 		}
 		return bytesRead;
@@ -89,12 +88,12 @@ public class DownloadTask extends Task<Long> {
 			dFile = new FileOutputStream(file);
 			return dFile;
 		} catch (FileNotFoundException e) {
-			e.printStackTrace();
+			alertBox();
 		}
 		return null;
 	}
 
-	private Long getFileSize() {
+	public Long getFileSize() {
 		long length = 0;
 		URLConnection connection = null;
 		try {
@@ -102,25 +101,18 @@ public class DownloadTask extends Task<Long> {
 			length = connection.getContentLengthLong();
 			return length;
 		} catch (MalformedURLException ex) {
-			System.err.println(ex.getMessage());
+			alertBox();
 		} catch (IOException ioe) {
-			System.err.println(ioe.getMessage());
+			alertBox();
 		}
 		return null;
 	}
 
-	public String getFileType() {
-		String type = "";
-		URLConnection connection = null;
-		try {
-			connection = url.openConnection();
-			type = connection.getContentType();
-			return type;
-		} catch (MalformedURLException ex) {
-			System.err.println(ex.getMessage());
-		} catch (IOException ioe) {
-			System.err.println(ioe.getMessage());
-		}
-		return null;
+	private void alertBox() {
+		Alert alert = new Alert(AlertType.ERROR);
+		alert.setTitle("Warning");
+		alert.setHeaderText("Invalid URL");
+		alert.setContentText("Cannot receive file from this URL. Please select another URL.");
+		alert.showAndWait();
 	}
 }

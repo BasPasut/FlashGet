@@ -21,7 +21,7 @@
                   <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
                </HBox.margin>
             </Label>
-            <TextField fx:id="urlField" prefHeight="25.0" prefWidth="350.0">
+            <TextField fx:id="urlField" onAction="#startWorker" prefHeight="25.0" prefWidth="350.0">
                <HBox.margin>
                   <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
                </HBox.margin>
