@@ -56,26 +56,25 @@ public class DownloadController {
 			alertBox();
 		} else {
 			downloadProgress.setStyle("-fx-accent: orange;");
-			FileChooser fc = new FileChooser();
-			fc.setInitialFileName(Paths.get(url.getPath()).getFileName().toString());
-			fc.setInitialDirectory(new File(System.getProperty("user.home") + "/Desktop"));
+			FileChooser fc = setFileChooser(url);
 			if (worker == null || !worker.isRunning()) {
 				file = fc.showSaveDialog(new Stage());
 				if (file != null) {
 					worker = new DownloadTask(url, file);
-					// automatically update the progressBar using worker's
-					// progress
-					// Property
 					downloadProgress.progressProperty().bind(worker.progressProperty());
-					// update the displayField whenever the value of worker
-					// changes:
-					// add the observer (ChangeListener)
 					filesize.textProperty().bind(worker.messageProperty());
 					filename.setText(file.getName());
 					new Thread(worker).start();
 				}
 			}
 		}
+	}
+
+	public FileChooser setFileChooser(URL url) {
+		FileChooser fc = new FileChooser();
+		fc.setInitialFileName(Paths.get(url.getPath()).getFileName().toString());
+		fc.setInitialDirectory(new File(System.getProperty("user.home") + "/Desktop"));
+		return fc;
 	}
 
 	public void stopWorker(ActionEvent event) {

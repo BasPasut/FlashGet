@@ -28,58 +28,57 @@ public class DownloadTask extends Task<Long> {
 	protected Long call() throws Exception {
 		Long length = getFileSize();
 		long bytesRead = 0;
-		if (length <= 0) {
 
-		} else {
-			updateProgress(0, length);
-			final int BUFFERSIZE = 16 * 1024;
-			InputStream in = null;
-			OutputStream out = null;
+		updateProgress(0, length);
+		final int BUFFERSIZE = 16 * 1024;
+		InputStream in = null;
+		OutputStream out = null;
+		try {
+			URLConnection connection = url.openConnection();
+			in = connection.getInputStream();
+			out = getOutputStream(file);
+		} catch (IOException e) {
+			alertBox();
+		}
+		byte[] buffer = new byte[BUFFERSIZE];
+		try {
+			do {
+				int n = in.read(buffer);
+				updateValue(bytesRead);
+				updateMessage(Long.toString(bytesRead) + "/" + length);
+				updateProgress(bytesRead, length);
+				if (n < 0) {
+					updateMessage("Complete");
+					break;
+				}
+				// n < 0 means end of the input
+				out.write(buffer, 0, n);
+				// write n bytes from buffer
+				bytesRead += n;
+
+				try {
+					Thread.sleep(1);
+				} catch (Exception e) {
+					break;
+				}
+			} while (true);
+		} catch (IOException ex) {
+			alertBox();
+		} finally {
 			try {
-				URLConnection connection = url.openConnection();
-				in = connection.getInputStream();
-				out = getOutputStream(file);
+				in.close();
 			} catch (IOException e) {
-				alertBox();
+				e.printStackTrace();
 			}
-			byte[] buffer = new byte[BUFFERSIZE];
 			try {
-				do {
-					int n = in.read(buffer);
-					updateValue(bytesRead);
-					updateMessage(Long.toString(bytesRead) + "/" + length);
-					updateProgress(bytesRead, length);
-					if (n < 0){
-						updateMessage("Complete");
-						break;
-					}
-					// n < 0 means end of the input
-					out.write(buffer, 0, n);
-					// write n bytes from buffer
-					bytesRead += n;
-
-					try {
-						Thread.sleep(1);
-					} catch (Exception e) {
-						break;
-					}
-				} while (true);
-			} catch (IOException ex) {
-				alertBox();
-			} finally {
-				try {
-					in.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-				try {
-					out.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+				out.close();
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
+
 		}
 		return bytesRead;
+
 	}
 
 	public FileOutputStream getOutputStream(File file) {
