@@ -36,20 +36,12 @@ public class DownloadController {
 	private DownloadTask worker;
 	private File file;
 
-	public URL createURL() {
-		String urlname = urlField.getText();
-		if (urlField.getText().isEmpty()) {
-			return null;
-		}
-		URL url = null;
-		try {
-			url = new URL(urlname);
-			return url;
-		} catch (MalformedURLException e) {
-			return null;
-		}
+	@FXML
+	public void initialize() {
+		download.setOnAction(this::startWorker);
+		cancel.setOnAction(this::stopWorker);
 	}
-
+	
 	public void startWorker(ActionEvent event) {
 		URL url = createURL();
 		if (url == null) {
@@ -69,6 +61,10 @@ public class DownloadController {
 			}
 		}
 	}
+	
+	public void stopWorker(ActionEvent event) {
+		worker.cancel();
+	}
 
 	public FileChooser setFileChooser(URL url) {
 		FileChooser fc = new FileChooser();
@@ -77,20 +73,27 @@ public class DownloadController {
 		return fc;
 	}
 
-	public void stopWorker(ActionEvent event) {
-		worker.cancel();
-	}
 
 	public void handleClear(ActionEvent event) {
 		urlField.clear();
 	}
 
-	@FXML
-	public void initialize() {
-		download.setOnAction(this::startWorker);
-		cancel.setOnAction(this::stopWorker);
-	}
+	
 
+	public URL createURL() {
+		String urlname = urlField.getText();
+		if (urlField.getText().isEmpty()) {
+			return null;
+		}
+		URL url = null;
+		try {
+			url = new URL(urlname);
+			return url;
+		} catch (MalformedURLException e) {
+			return null;
+		}
+	}
+	
 	public void alertBox() {
 		Alert alert = new Alert(AlertType.ERROR);
 		alert.setTitle("Warning");

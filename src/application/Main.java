@@ -23,7 +23,6 @@ public class Main extends Application {
 			primaryStage.setScene(scene);
 			primaryStage.sizeToScene();
 			primaryStage.show();
-			primaryStage.setResizable(false);
 			primaryStage.setTitle("Flashget");
 		} catch(Exception e) {
 			System.out.println("Exception creating scene: "+e.getMessage());

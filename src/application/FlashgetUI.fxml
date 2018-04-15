@@ -9,9 +9,9 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<VBox xmlns="http://javafx.com/javafx/9.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.DownloadController">
+<VBox prefHeight="106.0" prefWidth="804.0" xmlns="http://javafx.com/javafx/9.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.DownloadController">
    <children>
-      <HBox style="-fx-border-color: #000000;">
+      <HBox alignment="TOP_CENTER" style="-fx-border-color: #000000;">
          <children>
             <Label text="URL to Download">
                <font>
