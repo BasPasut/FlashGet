@@ -18,7 +18,6 @@ public class Main extends Application {
 		try {
 			Parent root = (Parent) FXMLLoader.load(getClass().getResource("FlashgetUI.fxml"));
 			Scene scene = new Scene(root);
-			setUserAgentStylesheet(STYLESHEET_CASPIAN);
 			primaryStage.getIcons().add(new Image("file:icon.png"));
 			primaryStage.setScene(scene);
 			primaryStage.sizeToScene();

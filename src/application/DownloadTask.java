@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.RandomAccessFile;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
@@ -18,57 +19,61 @@ public class DownloadTask extends Task<Long> {
 
 	private URL url;
 	private File file;
+	private Long start;
+	private Long size;
 
-	public DownloadTask(URL url, File file) {
+	public DownloadTask(URL url, File file, Long start, Long size) {
 		this.url = url;
 		this.file = file;
+		this.start = start;
+		this.size = size;
 	}
 
 	@Override
 	protected Long call() throws Exception {
 		long bytesRead = 0;
-		Long length = getFileSize();
-		if (length == null) {
+		RandomAccessFile writer;
+		if (size == null) {
 			updateMessage("Invalid");
 			updateProgress(0, 100);
 		} else {
-			updateProgress(0, length);
-			final int BUFFERSIZE = 16 * 1024;
+			updateProgress(0, size);
+			final int BUFFERSIZE = 16384;
 			InputStream in = null;
-			OutputStream out = null;
 			try {
 				URLConnection connection = url.openConnection();
+				String range = null;
+				if (size > 0L) {
+					range = String.format("bytes=%d-%d",
+							new Object[] { Long.valueOf(start), Long.valueOf((start + size) - 1L) });
+				} else {
+					range = String.format("bytes=%d-", new Object[] { Long.valueOf(start) });
+				}
+				connection.setRequestProperty("Range", range);
 				in = connection.getInputStream();
-				out = getOutputStream(file);
 			} catch (IOException e) {
 				alertBox();
 			}
+			writer = new RandomAccessFile(file, "rwd");
+			writer.seek(start);
 			byte[] buffer = new byte[BUFFERSIZE];
 			try {
-//				Long start = System.nanoTime();
+				// Long start = System.nanoTime();
 				do {
 					int n = in.read(buffer);
-//					Long stop = (long) ((System.nanoTime() - start)*1.0E-9);
-					updateValue(bytesRead);
-					//if you want to know download speed.
-//					updateMessage(String.format("%.5g mb / %.5g mb ds : %.5g kb/s", bytesRead*1E-6 , length*1E-6, ((bytesRead*1E-6)*(length*1E-6))/stop));
-					updateMessage(Long.toString(bytesRead) + "/" + length);
-					updateProgress(bytesRead, length);
 					if (n < 0) {
 						updateMessage("Complete");
 						break;
 					}
 					// n < 0 means end of the input
-					out.write(buffer, 0, n);
+					writer.write(buffer, 0, n);
 					// write n bytes from buffer
 					bytesRead += n;
-
-					try {
-						Thread.sleep(1);
-					} catch (Exception e) {
-						break;
-					}
-				} while (true);
+					updateValue(bytesRead);
+					updateMessage(Long.toString(bytesRead));
+					updateProgress(bytesRead, size);
+					Thread.sleep(1);
+				} while (bytesRead < size);
 			} catch (IOException ex) {
 				alertBox();
 			} finally {
@@ -77,46 +82,11 @@ public class DownloadTask extends Task<Long> {
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
-				try {
-					out.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-
+				writer.close();
 			}
 		}
 		return bytesRead;
 
-	}
-
-	public FileOutputStream getOutputStream(File file) {
-		FileOutputStream dFile = null;
-		try {
-			dFile = new FileOutputStream(file);
-			return dFile;
-		} catch (FileNotFoundException e) {
-			alertBox();
-		}
-		return null;
-	}
-
-	public Long getFileSize() {
-		long length = 0;
-		URLConnection connection = null;
-		try {
-			connection = url.openConnection();
-			length = connection.getContentLengthLong();
-			if (length > 0) {
-				return length;
-			} else {
-				return null;
-			}
-		} catch (MalformedURLException ex) {
-			alertBox();
-		} catch (IOException ioe) {
-			alertBox();
-		}
-		return null;
 	}
 
 	private void alertBox() {
@@ -126,4 +96,5 @@ public class DownloadTask extends Task<Long> {
 		alert.setContentText("Cannot receive file from this URL. Please select another URL.");
 		alert.showAndWait();
 	}
+
 }
