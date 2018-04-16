@@ -11,8 +11,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import javafx.beans.binding.DoubleBinding;
-import javafx.beans.property.ReadOnlyDoubleProperty;
-import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -97,15 +95,11 @@ public class DownloadController {
 					e.printStackTrace();
 				}
 
-				DoubleBinding compute = task1.progressProperty().add(task2.progressProperty()).add(task3.progressProperty()).add(task4.progressProperty());
-				
-				// worker = new DownloadTask(url, file,start,length);
-				// downloadProgress.progressProperty().bind(worker.progressProperty());
+				DoubleBinding compute = (task1.progressProperty().add(task2.progressProperty()).add(task3.progressProperty()).add(task4.progressProperty())).multiply(0.25);
 				downloadProgress.progressProperty().bind(compute);
 
-				filesize.textProperty().bind(task1.messageProperty());
+				filesize.textProperty().bind(compute.divide(0.25).multiply(25).asString("%.4g%%"));
 				filename.setText(file.getName());
-				// new Thread(worker).start();
 
 			}
 		}

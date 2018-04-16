@@ -1,13 +1,9 @@
 package application;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.RandomAccessFile;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 
@@ -33,6 +29,7 @@ public class DownloadTask extends Task<Long> {
 	protected Long call() throws Exception {
 		long bytesRead = 0;
 		RandomAccessFile writer;
+		updateValue(bytesRead);
 		if (size == null) {
 			updateMessage("Invalid");
 			updateProgress(0, 100);
