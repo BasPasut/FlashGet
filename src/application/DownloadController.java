@@ -20,9 +20,16 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
+/**
+ * Class that control the download information and sync code with the gui.
+ * 
+ * @author Pasut Kittiprapas
+ *
+ */
 public class DownloadController {
 
 	@FXML
@@ -47,6 +54,8 @@ public class DownloadController {
 	private ProgressBar thread3;
 	@FXML
 	private ProgressBar thread4;
+	@FXML
+	private HBox threadHolder;
 
 	Task<Long> task1;
 	Task<Long> task2;
@@ -54,6 +63,9 @@ public class DownloadController {
 	Task<Long> task4;
 	private File file;
 
+	/**
+	 * Sync the code with item in fxml file.
+	 */
 	@FXML
 	public void initialize() {
 		download.setOnAction(this::startWorker);
@@ -61,51 +73,66 @@ public class DownloadController {
 		cancel.setOnAction(this::stopWorker);
 	}
 
+	/**
+	 * Create the url and download the file in the url using Task.
+	 * 
+	 * @param event
+	 */
 	public void startWorker(ActionEvent event) {
 		URL url = createURL();
 		if (url == null) {
 			alertBox();
 		} else {
-			Long length = getFileSize(url) / 4;
-			downloadProgress.setStyle("-fx-accent: orange;");
-			FileChooser fc = setFileChooser(url);
-			file = fc.showSaveDialog(new Stage());
-			if (file != null) {
-				ExecutorService executor = Executors.newFixedThreadPool(6);
-				task1 = new DownloadTask(url, file, 0L, length);
-				thread1.progressProperty().bind(task1.progressProperty());
-				executor.execute(task1);
+			if (getFileSize(url) != null) {
+				// double computeThread =
+				// Math.floor((getFileSize(url)/16384.0)/5.0);
+				// Long numThread = (long) computeThread;
+				Long length = getFileSize(url) / 4;
+				downloadProgress.setStyle("-fx-accent: orange;");
+				FileChooser fc = setFileChooser(url);
+				file = fc.showSaveDialog(new Stage());
+				if (file != null) {
+					ExecutorService executor = Executors.newFixedThreadPool(5);
+					task1 = new DownloadTask(url, file, 0L, length);
+					thread1.progressProperty().bind(task1.progressProperty());
+					executor.execute(task1);
 
-				task2 = new DownloadTask(url, file, length, length);
-				thread2.progressProperty().bind(task2.progressProperty());
-				executor.execute(task2);
+					task2 = new DownloadTask(url, file, length, length);
+					thread2.progressProperty().bind(task2.progressProperty());
+					executor.execute(task2);
 
-				task3 = new DownloadTask(url, file, length * 2, length);
-				thread3.progressProperty().bind(task3.progressProperty());
-				executor.execute(task3);
+					task3 = new DownloadTask(url, file, length * 2, length);
+					thread3.progressProperty().bind(task3.progressProperty());
+					executor.execute(task3);
 
-				task4 = new DownloadTask(url, file, length * 3, length);
-				thread4.progressProperty().bind(task4.progressProperty());
-				executor.execute(task4);
+					task4 = new DownloadTask(url, file, length * 3, length);
+					thread4.progressProperty().bind(task4.progressProperty());
+					executor.execute(task4);
 
-				try {
-					executor.shutdown();
-					executor.awaitTermination(1, TimeUnit.MILLISECONDS);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
+					try {
+						executor.shutdown();
+						executor.awaitTermination(1, TimeUnit.MILLISECONDS);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+
+					DoubleBinding compute = (task1.progressProperty().add(task2.progressProperty())
+							.add(task3.progressProperty()).add(task4.progressProperty())).multiply(0.25);
+					downloadProgress.progressProperty().bind(compute);
+
+					filesize.textProperty().bind(compute.multiply(100).asString("%.4g%%"));
+					filename.setText(file.getName());
 				}
-
-				DoubleBinding compute = (task1.progressProperty().add(task2.progressProperty()).add(task3.progressProperty()).add(task4.progressProperty())).multiply(0.25);
-				downloadProgress.progressProperty().bind(compute);
-
-				filesize.textProperty().bind(compute.multiply(100).asString("%.4g%%"));
-				filename.setText(file.getName());
-
 			}
 		}
 
 	}
 
+	/**
+	 * Cancel the task that is running.
+	 * 
+	 * @param event
+	 */
 	public void stopWorker(ActionEvent event) {
 		task1.cancel();
 		task2.cancel();
@@ -113,6 +140,13 @@ public class DownloadController {
 		task4.cancel();
 	}
 
+	/**
+	 * Create filechooser window for user to select the path to save the
+	 * downloaded file.
+	 * 
+	 * @param url
+	 * @return
+	 */
 	public FileChooser setFileChooser(URL url) {
 		FileChooser fc = new FileChooser();
 		fc.setInitialFileName(Paths.get(url.getPath()).getFileName().toString());
@@ -120,10 +154,18 @@ public class DownloadController {
 		return fc;
 	}
 
+	/**
+	 * Clear the text in the url inputfield.
+	 * @param event
+	 */
 	public void handleClear(ActionEvent event) {
 		urlField.clear();
 	}
 
+	/**
+	 * Create and return the url.
+	 * @return
+	 */
 	public URL createURL() {
 		String urlname = urlField.getText();
 		if (urlField.getText().isEmpty()) {
@@ -138,6 +180,9 @@ public class DownloadController {
 		}
 	}
 
+	/**
+	 * Create alert in the window that give information about 'Invalid URL'.
+	 */
 	public void alertBox() {
 		Alert alert = new Alert(AlertType.ERROR);
 		alert.setTitle("Warning");
@@ -147,6 +192,11 @@ public class DownloadController {
 		urlField.clear();
 	}
 
+	/**
+	 * Compute and return the file size of the given url.
+	 * @param url
+	 * @return
+	 */
 	public Long getFileSize(URL url) {
 		long length = 0;
 		URLConnection connection = null;
@@ -156,7 +206,7 @@ public class DownloadController {
 			if (length > 0) {
 				return length;
 			} else {
-				return null;
+				alertBox();
 			}
 		} catch (MalformedURLException ex) {
 			alertBox();

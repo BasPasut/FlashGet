@@ -11,6 +11,13 @@ import javafx.concurrent.Task;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 
+/**
+ * Class that perform the download process which is read the file from the given
+ * url and write it into the new file.
+ * 
+ * @author Pasut Kittiprapas
+ *
+ */
 public class DownloadTask extends Task<Long> {
 
 	private URL url;
@@ -18,6 +25,14 @@ public class DownloadTask extends Task<Long> {
 	private Long start;
 	private Long size;
 
+	/**
+	 * Initialize the valuables that will be use when you create the object.
+	 * 
+	 * @param url
+	 * @param file
+	 * @param start
+	 * @param size
+	 */
 	public DownloadTask(URL url, File file, Long start, Long size) {
 		this.url = url;
 		this.file = file;
@@ -25,11 +40,14 @@ public class DownloadTask extends Task<Long> {
 		this.size = size;
 	}
 
+	/**
+	 * Read the file from the given start and stop position and write the data
+	 * that its read to the new file.
+	 */
 	@Override
 	protected Long call() throws Exception {
 		long bytesRead = 0;
 		RandomAccessFile writer;
-		updateValue(bytesRead);
 		if (size == null) {
 			updateMessage("Invalid");
 			updateProgress(0, 100);
@@ -55,7 +73,6 @@ public class DownloadTask extends Task<Long> {
 			writer.seek(start);
 			byte[] buffer = new byte[BUFFERSIZE];
 			try {
-				// Long start = System.nanoTime();
 				do {
 					int n = in.read(buffer);
 					if (n < 0) {
@@ -86,6 +103,9 @@ public class DownloadTask extends Task<Long> {
 
 	}
 
+	/**
+	 * Show alert information about the URL.
+	 */
 	private void alertBox() {
 		Alert alert = new Alert(AlertType.ERROR);
 		alert.setTitle("Warning");
