@@ -98,7 +98,7 @@ public class DownloadController {
 				DoubleBinding compute = (task1.progressProperty().add(task2.progressProperty()).add(task3.progressProperty()).add(task4.progressProperty())).multiply(0.25);
 				downloadProgress.progressProperty().bind(compute);
 
-				filesize.textProperty().bind(compute.divide(0.25).multiply(25).asString("%.4g%%"));
+				filesize.textProperty().bind(compute.multiply(100).asString("%.4g%%"));
 				filename.setText(file.getName());
 
 			}
